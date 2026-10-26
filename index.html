@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tati Papelaria</title>
+<style>
+:root{
+  --primary:#ec4899;
+  --secondary:#f5e6f7;
+  --background:#f5e6f7;
+  --on-primary:#ffffff;
+  --on-secondary:#9d174d;
+  --on-background:#4a294f;
+  --muted:#766c80;
+  --border:#eee6f5;
+  --pos:#16834b;
+  --neg:#c2415d;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  padding:24px;
+  min-height:100vh;
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  color:var(--on-background);
+  background:var(--background);
+}
+h1,h2{margin:0}
+h1{font-size:28px}
+h2{font-size:20px}
+header,.brand,.toolbar,.menu{display:flex;align-items:center;gap:12px}
+header{justify-content:space-between;flex-wrap:wrap;margin-bottom:22px}
+.logo{
+  width:48px;height:48px;border-radius:16px;
+  display:grid;place-items:center;
+  background:var(--primary);color:var(--on-primary);
+  font-size:20px;font-weight:900;
+}
+.subtitle{font-size:13px;color:var(--muted)}
+.menu{
+  gap:6px;padding:6px;overflow:auto;
+  background:#fff;border:1px solid #f0d8e7;border-radius:18px;
+  box-shadow:0 8px 24px #d78ab51c;
+}
+.menu button{
+  padding:10px 14px;white-space:nowrap;
+  background:transparent;color:#76506a;font-size:13px;font-weight:800;
+}
+.menu button.active,.menu button:hover{background:var(--secondary);color:#c02669}
+button{
+  border:0;border-radius:12px;padding:11px 15px;
+  font:inherit;font-weight:700;cursor:pointer;
+}
+.primary{background:var(--primary);color:var(--on-primary)}
+.secondary{background:var(--secondary);color:var(--on-secondary)}
+.ghost{background:#fff;border:1px solid #e7dff0;color:#493e54}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:18px}
+.kpi-label{font-size:12px;font-weight:700;color:#80758b;text-transform:uppercase}
+.kpi-value{margin-top:7px;font-size:25px;font-weight:900}
+a{color:var(--on-secondary);font-weight:700}
+.tag{padding:4px 8px;border-radius:999px;background:var(--secondary);color:var(--on-secondary);font-size:12px;font-weight:800;white-space:nowrap}
+.detail{display:grid;gap:3px;font-size:14px}
+.detail span{font-size:12px;font-weight:700;color:#6d6278}
+.actions{white-space:nowrap}
+.pay{padding:5px 10px;border-radius:999px;background:#fde8ee;color:var(--neg);font-size:12px;font-weight:800;white-space:nowrap}
+.pay.paid{background:#dcf5e5;color:var(--pos)}
+.pos{color:var(--pos)}
+.neg{color:var(--neg)}
+.panel{display:none}
+.panel.active{display:block}
+.toolbar{justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
+.table-wrap{overflow:auto;padding:0}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px 13px;border-bottom:1px solid #f0ebf4;text-align:left;font-size:13px}
+th{background:#fcfaff;color:#82768d;font-size:11px;text-transform:uppercase}
+tr:last-child td{border-bottom:0}
+.empty{padding:30px;text-align:center;color:#887d91}
+input,select{
+  width:100%;padding:11px;
+  border:1px solid #e5ddea;border-radius:11px;
+  background:#fff;font:inherit;color:inherit;
+}
+.search{max-width:280px}
+label{display:grid;gap:5px;font-size:12px;font-weight:700;color:#6d6278}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.status{width:auto;padding:6px 8px;font-size:12px;font-weight:700}
+dialog{
+  width:min(560px,100% - 28px);padding:20px;
+  border:0;border-radius:20px;color:inherit;
+}
+dialog::backdrop{background:#241a2d80}
+.modal-head{display:flex;justify-content:space-between;align-items:center}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+@media(max-width:760px){
+  body{padding:14px}
+  .kpis{grid-template-columns:1fr 1fr}
+  .kpi-value{font-size:20px}
+  .menu{width:100%}
+  .form{grid-template-columns:1fr}
+  .search{max-width:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">TP</div>
+    <div>
+      <h1>Tati Papelaria</h1>
+      <div class="subtitle">Estoque, vendas, encomendas e financeiro</div>
+    </div>
+  </div>
+  <nav class="menu" id="menu">
+    <button data-tab="home" class="active">🏠 Início</button>
+    <button data-tab="products">📦 Estoque</button>
+    <button data-tab="quotes">📝 Orçamentos</button>
+    <button data-tab="orders">🛍 Pedidos</button>
+    <button data-tab="finance">💰 Financeiro</button>
+  </nav>
+  <div class="toolbar">
+    <button class="secondary" id="add">+ Produto</button>
+    <button class="primary" id="export">⬇ Baixar XLSX</button>
+  </div>
+</header>
+
+<section class="kpis">
+  <div class="card"><div class="kpi-label">Estoque em produtos</div><div class="kpi-value" id="kStock"></div></div>
+  <div class="card"><div class="kpi-label">Vendas</div><div class="kpi-value pos" id="kSales"></div></div>
+  <div class="card"><div class="kpi-label">Despesas</div><div class="kpi-value neg" id="kExpense"></div></div>
+  <div class="card"><div class="kpi-label">Lucro</div><div class="kpi-value" id="kProfit"></div></div>
+</section>
+
+<main>
+  <section id="home" class="panel active">
+    <div class="card">
+      <h2>Resumo do negócio</h2>
+      <p>Cadastre produtos, acompanhe o estoque, registre encomendas e controle entradas e saídas. Os dados ficam salvos neste navegador.</p>
+      <p id="summary"></p>
+    </div>
+  </section>
+
+  <section id="products" class="panel">
+    <div class="toolbar">
+      <h2>Estoque e produtos</h2>
+      <input class="search" id="search" type="search" placeholder="Buscar produto...">
+    </div>
+    <div class="card table-wrap">
+      <table>
+        <thead><tr><th>Produto</th><th>Categoria</th><th>Qtd.</th><th>Custo</th><th>Venda</th><th>Lucro/un.</th><th></th></tr></thead>
+        <tbody id="productRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="quotes" class="panel">
+    <div class="toolbar"><h2>Orçamentos</h2></div>
+    <div class="card table-wrap">
+      <table>
+        <thead><tr><th>Cliente</th><th>Telefone</th><th>Produto</th><th>Qtd.</th><th>Valor</th><th>Validade</th><th>Situação</th></tr></thead>
+        <tbody id="quoteRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="orders" class="panel">
+    <div class="toolbar"><h2>Pedidos e encomendas</h2></div>
+    <div class="card table-wrap">
+      <table>
+        <thead><tr><th>Cliente</th><th>Telefone</th><th>Produto</th><th>Qtd.</th><th>Valor</th><th>Pedido</th><th>Entrega</th><th>Status</th><th>Pagamento</th><th></th></tr></thead>
+        <tbody id="orderRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="finance" class="panel">
+    <div class="toolbar"><h2>Entradas e despesas</h2></div>
+    <div class="card table-wrap">
+      <table>
+        <thead><tr><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Data</th></tr></thead>
+        <tbody id="financeRows"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<dialog id="modal"></dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const KEY = 'tati-papelaria-v1';
+const today = () => new Date().toISOString().slice(0, 10);
+const $ = id => document.getElementById(id);
+
+const defaults = {
+  products: [
+    { name: 'Caderno A5 Floral', cat: 'Cadernos', qty: 12, cost: 12.5, sale: 24.9 },
+    { name: 'Caneta Gel Rosa', cat: 'Escrita', qty: 30, cost: 2.5, sale: 5 },
+    { name: 'Kit Marca-texto', cat: 'Escrita', qty: 8, cost: 14, sale: 27.9 }
+  ],
+  quotes: [],
+  orders: [],
+  finance: []
+};
+
+let db;
+try { db = JSON.parse(localStorage.getItem(KEY)) || structuredClone(defaults); }
+catch { db = structuredClone(defaults); }
+
+db.quotes ||= [];
+db.orders.forEach((o, i) => o.paid ??= db.finance.some(f => f.order === i));
+
+const statuses = ['Pendente', 'Produção', 'Pronto', 'Entregue', 'Cancelado'];
+let tab = 'home';
+
+const brl = v => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const dateBR = v => v ? v.split('-').reverse().join('/') : '-';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const phoneLink = p => {
+  const digits = (p || '').replace(/\D/g, '');
+  return digits ? `<a href="https://wa.me/55${digits}" target="_blank" rel="noopener">${esc(p)}</a>` : '-';
+};
+const payBadge = (paid, i) => i === undefined
+  ? `<span class="pay ${paid ? 'paid' : ''}">${paid ? 'Pago' : 'Não pago'}</span>`
+  : `<button class="pay ${paid ? 'paid' : ''}" data-pay="${i}" title="Clique para alterar">${paid ? 'Pago' : 'Não pago'}</button>`;
+const sum = list => list.reduce((total, f) => total + f.value, 0);
+const rows = (list, cols, msg) => list.join('') || `<tr><td colspan="${cols}" class="empty">${msg}</td></tr>`;
+
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(db)); } catch {}
+  render();
+}
+
+function setTab(name) {
+  tab = name;
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === name));
+  document.querySelectorAll('#menu button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  $('add').textContent = { quotes: '+ Orçamento', orders: '+ Pedido', finance: '+ Lançamento' }[name] || '+ Produto';
+}
+
+function openModal(title, fields, onSave, label = 'Salvar') {
+  $('modal').innerHTML = `
+    <div class="modal-head"><h2>${title}</h2><button class="ghost" id="close">Fechar</button></div>
+    <div class="form">${fields}</div>
+    <button class="primary" id="confirm">${label}</button>`;
+  $('close').onclick = () => $('modal').close();
+  $('confirm').onclick = () => onSave() !== false && $('modal').close();
+  if (!$('modal').open) $('modal').showModal();
+}
+
+const field = (id, label, attrs = '') => `<label>${label}<input id="${id}" ${attrs}></label>`;
+
+function newProduct() {
+  openModal('Novo produto',
+    field('pName', 'Nome') + field('pCat', 'Categoria') +
+    field('pQty', 'Quantidade', 'type="number" min="0"') +
+    field('pCost', 'Custo unitário', 'type="number" step=".01" min="0"') +
+    field('pSale', 'Valor de venda', 'type="number" step=".01" min="0"'),
+    () => {
+      if (!$('pName').value.trim()) return $('pName').focus(), false;
+      db.products.push({
+        name: $('pName').value.trim(),
+        cat: $('pCat').value.trim() || 'Geral',
+        qty: +$('pQty').value || 0,
+        cost: +$('pCost').value || 0,
+        sale: +$('pSale').value || 0
+      });
+      save();
+    });
+}
+
+function productForm(prefix, extra) {
+  const options = db.products.map((p, i) => `<option value="${i}">${esc(p.name)}</option>`).join('');
+  return field(prefix + 'Client', 'Cliente') +
+    field(prefix + 'Phone', 'Telefone', 'type="tel" placeholder="(79) 99999-9999"') +
+    `<label>Produto<select id="${prefix}Product">${options}</select></label>` +
+    field(prefix + 'Qty', 'Quantidade', 'type="number" min="1" value="1"') +
+    field(prefix + 'Value', 'Valor total', 'type="number" step=".01" min="0"') +
+    extra;
+}
+
+function autoValue(prefix) {
+  const update = () => {
+    $(prefix + 'Value').value = (db.products[+$(prefix + 'Product').value].sale * (+$(prefix + 'Qty').value || 1)).toFixed(2);
+  };
+  $(prefix + 'Product').onchange = $(prefix + 'Qty').oninput = update;
+  update();
+}
+
+function newQuote() {
+  if (!db.products.length) return alert('Cadastre um produto primeiro.');
+  openModal('Novo orçamento',
+    productForm('q', field('qValid', 'Válido até', 'type="date"') + field('qDelivery', 'Entrega prevista', 'type="date"')),
+    () => {
+      db.quotes.push({
+        id: Date.now(),
+        client: $('qClient').value.trim() || 'Cliente',
+        phone: $('qPhone').value.trim(),
+        product: db.products[+$('qProduct').value].name,
+        qty: +$('qQty').value || 1,
+        value: +$('qValue').value || 0,
+        valid: $('qValid').value,
+        delivery: $('qDelivery').value,
+        status: 'Aberto'
+      });
+      save();
+    });
+  autoValue('q');
+}
+
+function setQuote(id, status) {
+  const quote = db.quotes.find(q => q.id === id);
+  if (!quote || quote.status !== 'Aberto') return;
+  quote.status = status;
+  if (status === 'Aprovado') {
+    db.orders.push({
+      client: quote.client,
+      phone: quote.phone,
+      product: quote.product,
+      qty: quote.qty,
+      value: quote.value,
+      date: today(),
+      delivery: quote.delivery,
+      status: 'Pendente',
+      paid: false
+    });
+  }
+  save();
+  if (status === 'Aprovado') setTab('orders');
+}
+
+const payField = (id, paid) => `<label>Pagamento<select id="${id}"><option value="0">Não pago</option><option value="1"${paid ? ' selected' : ''}>Pago</option></select></label>`;
+
+function newOrder() {
+  if (!db.products.length) return alert('Cadastre um produto primeiro.');
+  openModal('Novo pedido',
+    productForm('o', field('oDate', 'Data do pedido', `type="date" value="${today()}"`) + field('oDelivery', 'Data de entrega', 'type="date"') + payField('oPaid', false)),
+    () => {
+      const product = db.products[+$('oProduct').value];
+      db.orders.push({
+        client: $('oClient').value.trim() || 'Cliente',
+        phone: $('oPhone').value.trim(),
+        product: product.name,
+        qty: +$('oQty').value || 1,
+        value: +$('oValue').value || 0,
+        date: $('oDate').value,
+        delivery: $('oDelivery').value,
+        status: 'Pendente',
+        paid: false
+      });
+      updateOrder(db.orders.length - 1, { paid: $('oPaid').value === '1' });
+    });
+  autoValue('o');
+}
+
+function newEntry() {
+  openModal('Novo lançamento',
+    `<label>Tipo<select id="fType"><option>Entrada</option><option>Despesa</option></select></label>` +
+    field('fDesc', 'Descrição') +
+    field('fValue', 'Valor', 'type="number" step=".01" min="0"') +
+    field('fDate', 'Data', `type="date" value="${today()}"`),
+    () => {
+      db.finance.push({
+        type: $('fType').value,
+        desc: $('fDesc').value.trim() || 'Lançamento',
+        value: +$('fValue').value || 0,
+        date: $('fDate').value
+      });
+      save();
+    });
+}
+
+function updateOrder(i, changes) {
+  const order = db.orders[i];
+  const entry = db.finance.find(f => f.order === i);
+  const stockOf = () => db.products.find(p => p.name === order.product);
+
+  if (order.status === 'Entregue' && stockOf()) stockOf().qty += order.qty;
+  db.finance = db.finance.filter(f => f.order !== i);
+
+  Object.assign(order, changes);
+
+  if (order.status === 'Entregue' && stockOf()) stockOf().qty = Math.max(0, stockOf().qty - order.qty);
+  if (order.paid) {
+    db.finance.push({ type: 'Entrada', desc: 'Pedido - ' + order.client, value: order.value, date: entry?.date || today(), order: i });
+  }
+  save();
+}
+
+const item = (label, value) => `<div class="detail"><span>${label}</span><b>${value}</b></div>`;
+
+function viewOrder(i) {
+  const o = db.orders[i];
+  openModal('Pedido de ' + esc(o.client),
+    item('Cliente', esc(o.client)) + item('Telefone', phoneLink(o.phone)) +
+    item('Produto', esc(o.product)) + item('Quantidade', o.qty) +
+    item('Valor total', brl(o.value)) + item('Status', `<span class="tag">${o.status}</span>`) +
+    item('Pagamento', payBadge(o.paid)) + item('', '') +
+    item('Data do pedido', dateBR(o.date)) + item('Data de entrega', dateBR(o.delivery)),
+    () => { editOrder(i); return false; }, 'Editar pedido');
+}
+
+function editOrder(i) {
+  const o = db.orders[i];
+  const names = db.products.some(p => p.name === o.product) ? db.products.map(p => p.name) : [o.product, ...db.products.map(p => p.name)];
+  const choose = (list, current) => list.map(n => `<option${n === current ? ' selected' : ''} value="${esc(n)}">${esc(n)}</option>`).join('');
+  openModal('Editar pedido',
+    field('eClient', 'Cliente', `value="${esc(o.client)}"`) +
+    field('ePhone', 'Telefone', `type="tel" value="${esc(o.phone)}"`) +
+    `<label>Produto<select id="eProduct">${choose(names, o.product)}</select></label>` +
+    field('eQty', 'Quantidade', `type="number" min="1" value="${o.qty}"`) +
+    field('eValue', 'Valor total', `type="number" step=".01" min="0" value="${o.value}"`) +
+    `<label>Status<select id="eStatus">${choose(statuses, o.status)}</select></label>` +
+    payField('ePaid', o.paid) +
+    field('eDate', 'Data do pedido', `type="date" value="${o.date || ''}"`) +
+    field('eDelivery', 'Data de entrega', `type="date" value="${o.delivery || ''}"`),
+    () => {
+      updateOrder(i, {
+        client: $('eClient').value.trim() || 'Cliente',
+        phone: $('ePhone').value.trim(),
+        product: $('eProduct').value,
+        qty: +$('eQty').value || 1,
+        value: +$('eValue').value || 0,
+        status: $('eStatus').value,
+        paid: $('ePaid').value === '1',
+        date: $('eDate').value,
+        delivery: $('eDelivery').value
+      });
+    });
+  $('eProduct').onchange = $('eQty').oninput = () => {
+    const product = db.products.find(p => p.name === $('eProduct').value);
+    if (product) $('eValue').value = (product.sale * (+$('eQty').value || 1)).toFixed(2);
+  };
+}
+
+function removeProduct(i) {
+  if (confirm('Excluir este produto?')) {
+    db.products.splice(i, 1);
+    save();
+  }
+}
+
+function render() {
+  const q = $('search').value.toLowerCase();
+
+  $('productRows').innerHTML = rows(
+    db.products.map((p, i) => p.name.toLowerCase().includes(q) && `
+      <tr>
+        <td><b>${esc(p.name)}</b></td>
+        <td>${esc(p.cat)}</td>
+        <td>${p.qty}</td>
+        <td>${brl(p.cost)}</td>
+        <td>${brl(p.sale)}</td>
+        <td class="pos">${brl(p.sale - p.cost)}</td>
+        <td><button class="ghost" data-remove="${i}">Excluir</button></td>
+      </tr>`).filter(Boolean), 7, 'Nenhum produto.');
+
+  $('quoteRows').innerHTML = rows(
+    db.quotes.map(q => `
+      <tr>
+        <td>${esc(q.client)}</td>
+        <td>${phoneLink(q.phone)}</td>
+        <td>${esc(q.product)}</td>
+        <td>${q.qty}</td>
+        <td>${brl(q.value)}</td>
+        <td>${dateBR(q.valid)}</td>
+        <td>${q.status === 'Aberto'
+          ? `<button class="primary" data-approve="${q.id}">Aprovar</button> <button class="ghost" data-reject="${q.id}">Recusar</button>`
+          : `<span class="tag">${q.status === 'Aprovado' ? 'Aprovado · virou pedido' : q.status}</span>`}</td>
+      </tr>`).reverse(), 7, 'Nenhum orçamento cadastrado.');
+
+  $('orderRows').innerHTML = rows(
+    db.orders.map((o, i) => `
+      <tr>
+        <td>${esc(o.client)}</td>
+        <td>${phoneLink(o.phone)}</td>
+        <td>${esc(o.product)}</td>
+        <td>${o.qty}</td>
+        <td>${brl(o.value)}</td>
+        <td>${dateBR(o.date)}</td>
+        <td>${dateBR(o.delivery)}</td>
+        <td>
+          <select class="status" data-order="${i}" aria-label="Status do pedido">
+            ${statuses.map(s => `<option${s === o.status ? ' selected' : ''}>${s}</option>`).join('')}
+          </select>
+        </td>
+        <td>${payBadge(o.paid, i)}</td>
+        <td class="actions">
+          <button class="ghost" data-view="${i}">Ver</button>
+          <button class="ghost" data-edit="${i}">Editar</button>
+        </td>
+      </tr>`), 10, 'Nenhum pedido cadastrado.');
+
+  $('financeRows').innerHTML = rows(
+    db.finance.map(f => `
+      <tr>
+        <td class="${f.type === 'Entrada' ? 'pos' : 'neg'}"><b>${f.type}</b></td>
+        <td>${esc(f.desc)}</td>
+        <td>${brl(f.value)}</td>
+        <td>${dateBR(f.date)}</td>
+      </tr>`).reverse(), 4, 'Nenhum lançamento.');
+
+  const sales = sum(db.finance.filter(f => f.type === 'Entrada'));
+  const expenses = sum(db.finance.filter(f => f.type === 'Despesa'));
+  const profit = sales - expenses;
+
+  $('kStock').textContent = brl(db.products.reduce((t, p) => t + p.qty * p.cost, 0));
+  $('kSales').textContent = brl(sales);
+  $('kExpense').textContent = brl(expenses);
+  $('kProfit').textContent = brl(profit);
+  $('kProfit').className = 'kpi-value ' + (profit < 0 ? 'neg' : 'pos');
+  $('summary').innerHTML = `<b>${db.products.length}</b> produtos · <b>${db.quotes.filter(q => q.status === 'Aberto').length}</b> orçamentos em aberto · <b>${db.orders.length}</b> pedidos · <b>${db.finance.length}</b> lançamentos · <b>${brl(sum(db.orders.filter(o => !o.paid && o.status !== 'Cancelado')))}</b> a receber`;
+}
+
+function exportXLSX() {
+  if (!window.XLSX) return alert('Não foi possível carregar o gerador de planilhas. Verifique a conexão com a internet.');
+  const sheets = {
+    Produtos: [['Nome', 'Categoria', 'Quantidade', 'Custo', 'Venda', 'Lucro unitário'],
+      ...db.products.map(p => [p.name, p.cat, p.qty, p.cost, p.sale, p.sale - p.cost])],
+    Orçamentos: [['Cliente', 'Telefone', 'Produto', 'Quantidade', 'Valor', 'Válido até', 'Situação'],
+      ...db.quotes.map(q => [q.client, q.phone, q.product, q.qty, q.value, q.valid, q.status])],
+    Pedidos: [['Cliente', 'Telefone', 'Produto', 'Quantidade', 'Valor', 'Data do pedido', 'Data de entrega', 'Status', 'Pagamento'],
+      ...db.orders.map(o => [o.client, o.phone, o.product, o.qty, o.value, o.date, o.delivery, o.status, o.paid ? 'Pago' : 'Não pago'])],
+    Financeiro: [['Tipo', 'Descrição', 'Valor', 'Data'],
+      ...db.finance.map(f => [f.type, f.desc, f.value, f.date])]
+  };
+  const book = XLSX.utils.book_new();
+  for (const [name, data] of Object.entries(sheets)) {
+    const sheet = XLSX.utils.aoa_to_sheet(data);
+    sheet['!cols'] = data[0].map((_, c) => ({ wch: Math.min(40, Math.max(...data.map(r => String(r[c] ?? '').length)) + 2) }));
+    XLSX.utils.book_append_sheet(book, sheet, name);
+  }
+  XLSX.writeFile(book, 'tati-papelaria.xlsx');
+}
+
+$('menu').onclick = e => e.target.dataset.tab && setTab(e.target.dataset.tab);
+$('add').onclick = () => ({ quotes: newQuote, orders: newOrder, finance: newEntry }[tab] || newProduct)();
+$('export').onclick = exportXLSX;
+$('search').oninput = render;
+
+document.addEventListener('click', e => {
+  const { remove, approve, reject, view, edit, pay } = e.target.dataset;
+  if (remove) removeProduct(+remove);
+  if (approve) setQuote(+approve, 'Aprovado');
+  if (reject) setQuote(+reject, 'Recusado');
+  if (view) viewOrder(+view);
+  if (edit) editOrder(+edit);
+  if (pay) updateOrder(+pay, { paid: !db.orders[+pay].paid });
+});
+document.addEventListener('change', e => {
+  if (e.target.dataset.order) updateOrder(+e.target.dataset.order, { status: e.target.value });
+});
+
+setTab('home');
+render();
+</script>
+</body>
+</html>
